@@ -42,7 +42,7 @@ function layout() {
   render();
 }
 
-const CLASS = { "#": "w", ">": "v", "@": "p", r: "r", c: "c" };
+const CLASS = { "#": "w", ">": "v", "@": "p", r: "r", L: "L", c: "c" };
 
 function render() {
   const { cols, rows } = view;

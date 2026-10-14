@@ -11,6 +11,7 @@ const DRAIN_EVERY = 6;
 const ARC_COST = 6;
 const ARC_RADIUS = 3;
 const ARC_DAMAGE = 3;
+const INDUCTOR_DEPTH = 3;
 
 const WALL = "#", FLOOR = ".", VIA = ">";
 
@@ -108,6 +109,8 @@ class Room {
   }
 }
 
+const enemyName = e => (e.kind === "L" ? "induttore" : "resistore");
+
 class Game {
   constructor(seed) {
     this.rng = new PyRandom(seed);
@@ -168,8 +171,15 @@ class Game {
         if (this.tiles[y][x] === FLOOR) spots.push([x, y]);
     this.rng.shuffle(spots);
     const enemyCount = this.rng.randint(0, 1 + Math.floor(this.depth / 2));
-    for (const [x, y] of spots.slice(0, enemyCount))
-      this.enemies.push({ x, y, hp: 1 + Math.floor(this.depth / 3), drain: 1 + Math.floor(this.depth / 4) });
+    for (const [x, y] of spots.slice(0, enemyCount)) {
+      const hp = 1 + Math.floor(this.depth / 3), drain = 1 + Math.floor(this.depth / 4);
+      if (this.depth >= INDUCTOR_DEPTH && this.rng.random() < 0.3) {
+        // Inductors resist change: twice as tough, but sluggish.
+        this.enemies.push({ x, y, hp: hp * 2, drain, kind: "L" });
+        continue;
+      }
+      this.enemies.push({ x, y, hp, drain, kind: "r" });
+    }
     if (this.rng.random() < 0.6 && spots.length > enemyCount) this.caps.add(spots[enemyCount].join());
   }
 
@@ -177,7 +187,26 @@ class Game {
 
   enemyAt(x, y) { return this.enemies.find(e => e.x === x && e.y === y); }
   walkable(x, y) { return x >= 0 && x < W && y >= 0 && y < H && this.tiles[y][x] !== WALL; }
-  visible(x, y) { return (x - this.px) ** 2 + (y - this.py) ** 2 <= VIEW_RADIUS ** 2; }
+  visible(x, y) {
+    if ((x - this.px) ** 2 + (y - this.py) ** 2 > VIEW_RADIUS ** 2) return false;
+    return this.lineClear(x, y);
+  }
+
+  // Bresenham from the player to (x, y): no wall strictly in between.
+  lineClear(x, y) {
+    let x0 = this.px, y0 = this.py;
+    if (x0 === x && y0 === y) return true;
+    const dx = Math.abs(x - x0), dy = -Math.abs(y - y0);
+    const sx = x > x0 ? 1 : -1, sy = y > y0 ? 1 : -1;
+    let err = dx + dy;
+    for (;;) {
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+      if (x0 === x && y0 === y) return true;
+      if (this.tiles[y0][x0] === WALL) return false;
+    }
+  }
 
   reveal() {
     for (let y = Math.max(0, this.py - VIEW_RADIUS); y < Math.min(H, this.py + VIEW_RADIUS + 1); y++)
@@ -221,7 +250,7 @@ class Game {
     this.charge -= ARC_COST;
     const targets = this.enemies.filter(e => Math.max(Math.abs(e.x - this.px), Math.abs(e.y - this.py)) <= ARC_RADIUS);
     for (const enemy of targets) this.hit(enemy, ARC_DAMAGE);
-    this.say(`ZAP! Arco su ${targets.length} resistori.`);
+    this.say(`ZAP! Arco su ${targets.length} componenti.`);
     this.endTurn();
   }
 
@@ -230,7 +259,8 @@ class Game {
     if (enemy.hp > 0) return;
     this.enemies.splice(this.enemies.indexOf(enemy), 1);
     this.kills++;
-    this.say("Resistore bruciato.");
+    const name = enemyName(enemy);
+    this.say(`${name[0].toUpperCase()}${name.slice(1)} bruciato.`);
   }
 
   pickup() {
@@ -250,17 +280,18 @@ class Game {
     if (this.charge > 0) return;
     this.charge = 0;
     this.over = true;
-    this.say(`Ti spegni al layer ${this.depth}. Resistori bruciati: ${this.kills}.`);
+    this.say(`Ti spegni al layer ${this.depth}. Componenti bruciati: ${this.kills}.`);
   }
 
   enemyAct(enemy) {
     const dist = Math.max(Math.abs(enemy.x - this.px), Math.abs(enemy.y - this.py));
-    if (dist > VIEW_RADIUS) return;
+    if (dist > VIEW_RADIUS || !this.visible(enemy.x, enemy.y)) return;
     if (dist === 1) {
       this.charge -= enemy.drain;
-      this.say(`Un resistore ti succhia ${enemy.drain} di carica.`);
+      this.say(`Un ${enemyName(enemy)} ti succhia ${enemy.drain} di carica.`);
       return;
     }
+    if (enemy.kind === "L" && this.turn % 2) return;
     const sx0 = Math.sign(this.px - enemy.x), sy0 = Math.sign(this.py - enemy.y);
     for (const [sx, sy] of [[sx0, sy0], [sx0, 0], [0, sy0]]) {
       const nx = enemy.x + sx, ny = enemy.y + sy;
@@ -277,7 +308,8 @@ class Game {
     if (x === this.px && y === this.py) return "@";
     if (!this.seen[y][x]) return " ";
     if (!this.visible(x, y)) return this.tiles[y][x];
-    if (this.enemyAt(x, y)) return "r";
+    const enemy = this.enemyAt(x, y);
+    if (enemy) return enemy.kind;
     if (this.caps.has([x, y].join())) return "c";
     return this.tiles[y][x];
   }

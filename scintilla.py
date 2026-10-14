@@ -2,7 +2,8 @@
 """Scintilla: a tiny terminal roguelike. You are a spark crossing a circuit.
 
 Charge is both your life and your ammo. Every few steps you lose a bit of it,
-resistors (r) drain it on contact, capacitors (c) refill it. Bump a resistor
+resistors (r) drain it on contact, capacitors (c) refill it, inductors (L,
+from layer 3) are slow but tough. Bump a resistor
 to zap it, press z to discharge an arc on everything nearby (costs charge).
 Reach the via (>) to go one layer deeper. How deep can you go?
 
@@ -19,6 +20,7 @@ DRAIN_EVERY = 6
 ARC_COST = 6
 ARC_RADIUS = 3
 ARC_DAMAGE = 3
+INDUCTOR_DEPTH = 3
 
 WALL, FLOOR, VIA = "#", ".", ">"
 
@@ -36,8 +38,12 @@ class Room:
 
 
 class Enemy:
-    def __init__(self, x, y, hp, drain):
-        self.x, self.y, self.hp, self.drain = x, y, hp, drain
+    def __init__(self, x, y, hp, drain, kind="r"):
+        self.x, self.y, self.hp, self.drain, self.kind = x, y, hp, drain, kind
+
+    @property
+    def name(self):
+        return "induttore" if self.kind == "L" else "resistore"
 
 
 class Game:
@@ -99,7 +105,12 @@ class Game:
         self.rng.shuffle(spots)
         enemy_count = self.rng.randint(0, 1 + self.depth // 2)
         for x, y in spots[:enemy_count]:
-            self.enemies.append(Enemy(x, y, hp=1 + self.depth // 3, drain=1 + self.depth // 4))
+            hp, drain = 1 + self.depth // 3, 1 + self.depth // 4
+            if self.depth >= INDUCTOR_DEPTH and self.rng.random() < 0.3:
+                # Inductors resist change: twice as tough, but sluggish.
+                self.enemies.append(Enemy(x, y, hp=hp * 2, drain=drain, kind="L"))
+                continue
+            self.enemies.append(Enemy(x, y, hp=hp, drain=drain))
         if self.rng.random() < 0.6 and len(spots) > enemy_count:
             self.caps.add(spots[enemy_count])
 
@@ -112,7 +123,30 @@ class Game:
         return 0 <= x < W and 0 <= y < H and self.tiles[y][x] != WALL
 
     def visible(self, x, y):
-        return (x - self.px) ** 2 + (y - self.py) ** 2 <= VIEW_RADIUS ** 2
+        if (x - self.px) ** 2 + (y - self.py) ** 2 > VIEW_RADIUS ** 2:
+            return False
+        return self.line_clear(x, y)
+
+    def line_clear(self, x, y):
+        """Bresenham from the player to (x, y): no wall strictly in between."""
+        x0, y0 = self.px, self.py
+        if (x0, y0) == (x, y):
+            return True
+        dx, dy = abs(x - x0), -abs(y - y0)
+        sx, sy = (1 if x > x0 else -1), (1 if y > y0 else -1)
+        err = dx + dy
+        while True:
+            e2 = 2 * err
+            if e2 >= dy:
+                err += dy
+                x0 += sx
+            if e2 <= dx:
+                err += dx
+                y0 += sy
+            if (x0, y0) == (x, y):
+                return True
+            if self.tiles[y0][x0] == WALL:
+                return False
 
     def reveal(self):
         for y in range(max(0, self.py - VIEW_RADIUS), min(H, self.py + VIEW_RADIUS + 1)):
@@ -156,7 +190,7 @@ class Game:
                    if max(abs(e.x - self.px), abs(e.y - self.py)) <= ARC_RADIUS]
         for enemy in targets:
             self.hit(enemy, ARC_DAMAGE)
-        self.say(f"ZAP! Arco su {len(targets)} resistori.")
+        self.say(f"ZAP! Arco su {len(targets)} componenti.")
         self.end_turn()
 
     def hit(self, enemy, damage):
@@ -165,7 +199,7 @@ class Game:
             return
         self.enemies.remove(enemy)
         self.kills += 1
-        self.say("Resistore bruciato.")
+        self.say(f"{enemy.name.capitalize()} bruciato.")
 
     def pickup(self):
         if (self.px, self.py) not in self.caps:
@@ -186,15 +220,17 @@ class Game:
             return
         self.charge = 0
         self.over = True
-        self.say(f"Ti spegni al layer {self.depth}. Resistori bruciati: {self.kills}.")
+        self.say(f"Ti spegni al layer {self.depth}. Componenti bruciati: {self.kills}.")
 
     def enemy_act(self, enemy):
         dist = max(abs(enemy.x - self.px), abs(enemy.y - self.py))
-        if dist > VIEW_RADIUS:
+        if dist > VIEW_RADIUS or not self.visible(enemy.x, enemy.y):
             return
         if dist == 1:
             self.charge -= enemy.drain
-            self.say(f"Un resistore ti succhia {enemy.drain} di carica.")
+            self.say(f"Un {enemy.name} ti succhia {enemy.drain} di carica.")
+            return
+        if enemy.kind == "L" and self.turn % 2:
             return
         step_x = (self.px > enemy.x) - (self.px < enemy.x)
         step_y = (self.py > enemy.y) - (self.py < enemy.y)
@@ -216,8 +252,9 @@ class Game:
             return " "
         if not self.visible(x, y):
             return self.tiles[y][x]
-        if self.enemy_at(x, y):
-            return "r"
+        enemy = self.enemy_at(x, y)
+        if enemy:
+            return enemy.kind
         if (x, y) in self.caps:
             return "c"
         return self.tiles[y][x]

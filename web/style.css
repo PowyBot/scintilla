@@ -6,6 +6,7 @@
   --floor: #4a5363;
   --spark: #ffd75e;
   --enemy: #ff6b6b;
+  --inductor: #d2a8ff;
   --cap: #5ee0ff;
   --via: #7ee787;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
@@ -64,6 +65,7 @@ main {
 #map .m { color: var(--dim); }
 #map .p { color: var(--spark); font-weight: bold; text-shadow: 0 0 6px var(--spark); }
 #map .r { color: var(--enemy); font-weight: bold; }
+#map .L { color: var(--inductor); font-weight: bold; }
 #map .c { color: var(--cap); font-weight: bold; }
 #map .v { color: var(--via); font-weight: bold; }
 
