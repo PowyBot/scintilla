@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>Scintilla ⚡</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header id="hud">
+    <div class="row">
+      <span>Layer <b id="depth">1</b></span>
+      <span class="bar"><span id="bar-fill"></span></span>
+      <span><b id="charge">30</b></span>
+      <span>Kill <b id="kills">0</b></span>
+    </div>
+    <div class="row small">
+      <span>seed <a id="seed" href="#">0</a></span>
+      <span>record layer <b id="best">0</b></span>
+    </div>
+  </header>
+
+  <div id="map-wrap"><pre id="map" aria-label="mappa"></pre></div>
+
+  <div id="log" aria-live="polite"></div>
+
+  <nav id="pad" aria-label="controlli">
+    <button data-dir="-1,-1" style="--r:-45deg" aria-label="su-sinistra"></button>
+    <button data-dir="0,-1" style="--r:0deg" aria-label="su"></button>
+    <button data-dir="1,-1" style="--r:45deg" aria-label="su-destra"></button>
+    <button data-dir="-1,0" style="--r:-90deg" aria-label="sinistra"></button>
+    <button id="arc" class="arc" aria-label="arco">ARCO</button>
+    <button data-dir="1,0" style="--r:90deg" aria-label="destra"></button>
+    <button data-dir="-1,1" style="--r:-135deg" aria-label="giù-sinistra"></button>
+    <button data-dir="0,1" style="--r:180deg" aria-label="giù"></button>
+    <button data-dir="1,1" style="--r:135deg" aria-label="giù-destra"></button>
+  </nav>
+
+  <p id="help">
+    <span class="touch">Swipe o tocca la mappa per muoverti, tieni premuto il d-pad per correre. ARCO colpisce tutto entro 3 caselle, costa 6 carica.</span>
+    <span class="keys">hjkl/yubn · wasd · frecce muovi · z arco · Invio nuova partita</span>
+  </p>
+</main>
+
+<div id="over" hidden>
+  <div class="box">
+    <h2>Ti sei spento</h2>
+    <p id="over-text"></p>
+    <button id="again">Nuova partita</button>
+    <button id="retry" class="secondary">Stesso seed</button>
+  </div>
+</div>
+
+<script src="scintilla.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
