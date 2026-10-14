@@ -122,7 +122,7 @@ class Game:
 
     def say(self, text):
         self.log.append(text)
-        del self.log[:-3]
+        del self.log[:-2]
 
     # --- actions ----------------------------------------------------------
 
@@ -234,6 +234,18 @@ KEYS = {
 }
 
 
+def put(stdscr, y, text):
+    """Draw a line, silently clipped to the terminal (fits 80x24)."""
+    import curses
+    rows, cols = stdscr.getmaxyx()
+    if y >= rows:
+        return
+    try:
+        stdscr.addstr(y, 0, text[:cols - 1])
+    except curses.error:
+        pass
+
+
 def play(stdscr, seed):
     import curses
     curses.curs_set(0)
@@ -243,11 +255,11 @@ def play(stdscr, seed):
     while True:
         stdscr.erase()
         for y in range(H):
-            stdscr.addstr(y, 0, "".join(game.glyph(x, y) for x in range(W)))
-        stdscr.addstr(H, 0, game.status())
+            put(stdscr, y, "".join(game.glyph(x, y) for x in range(W)))
+        put(stdscr, H, game.status())
         for i, line in enumerate(game.log):
-            stdscr.addstr(H + 1 + i, 0, line[:W + 19])
-        stdscr.addstr(H + 4, 0, "hjkl/wasd/frecce muovi · z arco · q esci")
+            put(stdscr, H + 1 + i, line)
+        put(stdscr, H + 3, "hjkl/wasd/frecce muovi · z arco · q esci")
         stdscr.refresh()
         key = stdscr.getch()
         if key in (ord("q"), 27):
