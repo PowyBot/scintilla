@@ -109,7 +109,9 @@ class Game:
         self.rng.shuffle(spots)
         enemy_count = self.rng.randint(0, 1 + self.depth // 2)
         for x, y in spots[:enemy_count]:
-            hp, drain = 1 + self.depth // 3, 1 + self.depth // 4
+            # hp steps at layers 4 and 7, not 3 and 6: at 6 it coincided with the bigger enemy count
+            # and 45% of bot runs died there (tools_bot.py). Off by one layer, deaths spread over 6-7.
+            hp, drain = 1 + (self.depth - 1) // 3, 1 + self.depth // 4
             if self.depth >= INDUCTOR_DEPTH and self.rng.random() < 0.3:
                 # Inductors resist change: twice as tough, but sluggish.
                 self.enemies.append(Enemy(x, y, hp=hp * 2, drain=drain, kind="L"))

@@ -176,7 +176,7 @@ class Game {
     this.rng.shuffle(spots);
     const enemyCount = this.rng.randint(0, 1 + Math.floor(this.depth / 2));
     for (const [x, y] of spots.slice(0, enemyCount)) {
-      const hp = 1 + Math.floor(this.depth / 3), drain = 1 + Math.floor(this.depth / 4);
+      const hp = 1 + Math.floor((this.depth - 1) / 3), drain = 1 + Math.floor(this.depth / 4);
       if (this.depth >= INDUCTOR_DEPTH && this.rng.random() < 0.3) {
         // Inductors resist change: twice as tough, but sluggish.
         this.enemies.push({ x, y, hp: hp * 2, drain, kind: "L" });
