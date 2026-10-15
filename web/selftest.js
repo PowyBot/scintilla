@@ -9,7 +9,9 @@ for (let seed = 0; seed < 200; seed++) {
   const game = new Game(seed);
   const bot = new PyRandom(seed);
   for (let i = 0; i < 3000 && !game.over; i++) {
-    if (bot.random() < 0.05) game.arc();
+    const roll = bot.random();
+    if (roll < 0.05) game.arc();
+    else if (roll < 0.1) game.run(...bot.choice(moves));
     else game.move(...bot.choice(moves));
     if (!game.walkable(game.px, game.py)) throw new Error(`seed ${seed}: player in a wall`);
     if (game.charge < 0 || game.charge > MAX_CHARGE) throw new Error(`seed ${seed}: charge ${game.charge}`);

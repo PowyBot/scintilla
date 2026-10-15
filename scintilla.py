@@ -18,6 +18,7 @@ START_CHARGE = 30
 MAX_CHARGE = 40
 DRAIN_EVERY = 6
 ARC_COST = 6
+RUN_LIMIT = 60
 ARC_RADIUS = 3
 ARC_DAMAGE = 3
 INDUCTOR_DEPTH = 3
@@ -67,6 +68,7 @@ class Game:
         self.px, self.py = rooms[0].center()
         vx, vy = rooms[-1].center()
         self.tiles[vy][vx] = VIA
+        self.via = (vx, vy)
         self.caps = set()
         self.enemies = []
         for room in rooms[1:]:
@@ -178,6 +180,22 @@ class Game:
             self.next_layer()
             return
         self.end_turn()
+
+    def run(self, dx, dy):
+        """Shift-run: step until blocked, the layer changes, or something new shows up."""
+        for _ in range(RUN_LIMIT):
+            depth, before = self.depth, (self.px, self.py)
+            via_known = self.seen[self.via[1]][self.via[0]]
+            self.move(dx, dy)
+            if self.over or self.depth != depth or (self.px, self.py) == before:
+                return
+            if self.alert() or (not via_known and self.seen[self.via[1]][self.via[0]]):
+                return
+
+    def alert(self):
+        """Something worth stopping for: a visible enemy or capacitor."""
+        return (any(self.visible(e.x, e.y) for e in self.enemies)
+                or any(self.visible(x, y) for x, y in self.caps))
 
     def arc(self):
         if self.over:
@@ -296,7 +314,7 @@ def play(stdscr, seed):
         put(stdscr, H, game.status())
         for i, line in enumerate(game.log):
             put(stdscr, H + 1 + i, line)
-        put(stdscr, H + 3, "hjkl/wasd/frecce muovi · z arco · q esci")
+        put(stdscr, H + 3, "hjkl/wasd/frecce muovi · MAIUSCOLA corri · z arco · q esci")
         stdscr.refresh()
         key = stdscr.getch()
         if key in (ord("q"), 27):
@@ -306,7 +324,11 @@ def play(stdscr, seed):
         if key == ord("z"):
             game.arc()
             continue
-        step = arrows.get(key) or KEYS.get(chr(key) if 0 <= key < 256 else "")
+        char = chr(key) if 0 <= key < 256 else ""
+        if char.isupper() and char.lower() in KEYS:
+            game.run(*KEYS[char.lower()])
+            continue
+        step = arrows.get(key) or KEYS.get(char)
         if step:
             game.move(*step)
 
@@ -320,8 +342,11 @@ def selftest(runs=200):
         for _ in range(3000):
             if game.over:
                 break
-            if bot.random() < 0.05:
+            roll = bot.random()
+            if roll < 0.05:
                 game.arc()
+            elif roll < 0.1:
+                game.run(*bot.choice(list(KEYS.values())))
             else:
                 game.move(*bot.choice(list(KEYS.values())))
             assert game.walkable(game.px, game.py)

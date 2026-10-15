@@ -9,6 +9,7 @@ const START_CHARGE = 30;
 const MAX_CHARGE = 40;
 const DRAIN_EVERY = 6;
 const ARC_COST = 6;
+const RUN_LIMIT = 60;
 const ARC_RADIUS = 3;
 const ARC_DAMAGE = 3;
 const INDUCTOR_DEPTH = 3;
@@ -133,6 +134,7 @@ class Game {
     [this.px, this.py] = rooms[0].center();
     const [vx, vy] = rooms[rooms.length - 1].center();
     this.tiles[vy][vx] = VIA;
+    this.via = [vx, vy];
     this.caps = new Set();
     this.enemies = [];
     for (const room of rooms.slice(1)) this.populate(room);
@@ -239,6 +241,23 @@ class Game {
       return;
     }
     this.endTurn();
+  }
+
+  // Shift-run: step until blocked, the layer changes, or something new shows up.
+  run(dx, dy) {
+    for (let i = 0; i < RUN_LIMIT; i++) {
+      const depth = this.depth, bx = this.px, by = this.py;
+      const viaKnown = this.seen[this.via[1]][this.via[0]];
+      this.move(dx, dy);
+      if (this.over || this.depth !== depth || (this.px === bx && this.py === by)) return;
+      if (this.alert() || (!viaKnown && this.seen[this.via[1]][this.via[0]])) return;
+    }
+  }
+
+  // Something worth stopping for: a visible enemy or capacitor.
+  alert() {
+    return this.enemies.some(e => this.visible(e.x, e.y))
+      || [...this.caps].some(c => { const [x, y] = c.split(",").map(Number); return this.visible(x, y); });
   }
 
   arc() {

@@ -11,7 +11,7 @@ Un roguelike minuscolo da terminale. Sei una scintilla che attraversa un circuit
 - `>` via: scendi al layer successivo. Il punteggio è quanto in profondità arrivi.
 
 ```
-python3 scintilla.py            # gioca (hjkl / wasd / frecce, q esce)
+python3 scintilla.py            # gioca (hjkl / wasd / frecce, MAIUSCOLA corre, q esce)
 python3 scintilla.py --seed 42  # partita riproducibile
 python3 scintilla.py --selftest # 200 partite di bot casuali, controlla invarianti
 python3 tools_bot.py            # bot "barone" che vede tutta la mappa: misura la difficoltà
@@ -21,8 +21,8 @@ python3 tools_bot.py            # bot "barone" che vede tutta la mappa: misura l
 
 Gioca nel browser, anche da telefono: **https://scintilla.test.enn3.ovh**
 
-- Da telefono: d-pad a schermo (tieni premuto per correre), swipe o tocco sulla mappa per muoverti, `ARCO` al centro.
-- Da tastiera: gli stessi tasti del terminale, `z` arco, Invio per una nuova partita.
+- Da telefono: d-pad a schermo (tieni premuto per correre: si ferma da solo se compare un nemico o un condensatore), swipe o tocco sulla mappa per muoverti, `ARCO` al centro.
+- Da tastiera: gli stessi tasti del terminale, Shift+direzione corre, `z` arco, Invio per una nuova partita.
 - `?seed=42` nell'URL dà esattamente la stessa partita di `--seed 42` (c'è un porting del Mersenne Twister di Python). Il record viene salvato nel browser.
 
 È JS vanilla in `web/`, senza build step: basta servire la cartella come file statici.

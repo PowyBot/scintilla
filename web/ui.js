@@ -84,10 +84,11 @@ function render() {
   }
 }
 
-function act(dir) {
+function act(dir, running = false) {
   if (game.over) return;
-  if (dir) game.move(dir[0], dir[1]);
-  else game.arc();
+  if (!dir) game.arc();
+  else if (running) game.run(dir[0], dir[1]);
+  else game.move(dir[0], dir[1]);
   render();
 }
 
@@ -101,7 +102,7 @@ document.addEventListener("keydown", e => {
     return;
   }
   const dir = ARROWS[e.key] || KEYS[e.key.toLowerCase()];
-  if (dir) act(dir);
+  if (dir) act(dir, e.shiftKey);
   else if (e.key.toLowerCase() === "z") act(null);
   else return;
   e.preventDefault();
@@ -123,7 +124,12 @@ for (const btn of document.querySelectorAll("#pad button")) {
     btn.classList.add("held");
     act(dir);
     if (!dir) return; // never auto-repeat the arc
-    const tick = delay => { repeat = setTimeout(() => { act(dir); tick(110); }, delay); };
+    // holding keeps walking, but lets go as soon as something shows up
+    const tick = delay => { repeat = setTimeout(() => {
+      act(dir);
+      if (game.over || game.alert()) stopRepeat();
+      else tick(110);
+    }, delay); };
     tick(320);
   });
   for (const ev of ["pointerup", "pointercancel", "pointerleave"]) btn.addEventListener(ev, stopRepeat);
