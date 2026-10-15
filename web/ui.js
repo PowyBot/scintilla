@@ -55,7 +55,8 @@ function render() {
     let line = "";
     for (let x = view.x0; x < view.x0 + cols; x++) {
       const g = game.glyph(x, y);
-      const cls = game.seen[y][x] && !game.visible(x, y) && g !== "@" ? "m" : CLASS[g];
+      let cls = game.seen[y][x] && !game.visible(x, y) && g !== "@" ? "m" : CLASS[g];
+      if ((g === "r" || g === "L") && game.under(x, y)) cls += game.under(x, y) === "c" ? " on-c" : " on-v"; // don't let an enemy hide what it stands on
       const ch = g === ">" ? "&gt;" : g;
       line += cls ? `<span class="${cls}">${ch}</span>` : ch;
     }

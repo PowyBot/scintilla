@@ -68,6 +68,8 @@ main {
 #map .L { color: var(--inductor); font-weight: bold; }
 #map .c { color: var(--cap); font-weight: bold; }
 #map .v { color: var(--via); font-weight: bold; }
+#map .on-c { text-decoration: underline 2px var(--cap); }
+#map .on-v { text-decoration: underline 2px var(--via); }
 
 #log { min-height: 2.6em; font-size: 14px; line-height: 1.3; }
 #log div:last-child { color: #fff; }

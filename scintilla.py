@@ -287,6 +287,12 @@ class Game:
             return "c"
         return self.tiles[y][x]
 
+    def under(self, x, y):
+        """What a visible enemy is standing on, if worth knowing: 'c' or '>' (else None)."""
+        if (x, y) in self.caps:
+            return "c"
+        return ">" if self.tiles[y][x] == ">" else None
+
     def status(self):
         bar = "#" * (self.charge * 20 // MAX_CHARGE)
         return f"Layer {self.depth}  Carica [{bar:<20}] {self.charge:>2}  Kill {self.kills}"
@@ -321,6 +327,9 @@ def play(stdscr, seed):
         stdscr.erase()
         for y in range(H):
             put(stdscr, y, "".join(game.glyph(x, y) for x in range(W)))
+        for e in game.enemies:  # an enemy on a capacitor or on the way down: underline it, don't hide it
+            if game.visible(e.x, e.y) and game.under(e.x, e.y) and e.x < stdscr.getmaxyx()[1] - 1:
+                stdscr.chgat(e.y, e.x, 1, curses.A_UNDERLINE | curses.A_BOLD)
         put(stdscr, H, game.status())
         for i, line in enumerate(game.log):
             put(stdscr, H + 1 + i, line)

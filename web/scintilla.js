@@ -334,6 +334,12 @@ class Game {
 
   // rendering
 
+  // What a visible enemy is standing on, if worth knowing: "c" or ">" (else null).
+  under(x, y) {
+    if (this.caps.has([x, y].join())) return "c";
+    return this.tiles[y][x] === ">" ? ">" : null;
+  }
+
   glyph(x, y) {
     if (x === this.px && y === this.py) return "@";
     if (!this.seen[y][x]) return " ";
