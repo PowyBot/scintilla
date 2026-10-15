@@ -186,16 +186,20 @@ class Game:
         for _ in range(RUN_LIMIT):
             depth, before = self.depth, (self.px, self.py)
             via_known = self.seen[self.via[1]][self.via[0]]
+            caps = self.visible_caps()
             self.move(dx, dy)
             if self.over or self.depth != depth or (self.px, self.py) == before:
                 return
-            if self.alert() or (not via_known and self.seen[self.via[1]][self.via[0]]):
+            if self.alert(caps) or (not via_known and self.seen[self.via[1]][self.via[0]]):
                 return
 
-    def alert(self):
-        """Something worth stopping for: a visible enemy or capacitor."""
+    def visible_caps(self):
+        return {(x, y) for x, y in self.caps if self.visible(x, y)}
+
+    def alert(self, caps_before=frozenset()):
+        """Something worth stopping for: a visible enemy, or a capacitor not already in view."""
         return (any(self.visible(e.x, e.y) for e in self.enemies)
-                or any(self.visible(x, y) for x, y in self.caps))
+                or bool(self.visible_caps() - caps_before))
 
     def arc(self):
         if self.over:
@@ -269,7 +273,7 @@ class Game:
         if not self.seen[y][x]:
             return " "
         if not self.visible(x, y):
-            return self.tiles[y][x]
+            return "c" if (x, y) in self.caps else self.tiles[y][x]  # capacitors don't move: remember them
         enemy = self.enemy_at(x, y)
         if enemy:
             return enemy.kind
@@ -333,8 +337,8 @@ def play(stdscr, seed):
             game.move(*step)
 
 
-def selftest(runs=200):
-    """Random bots play many games; check invariants instead of crashing."""
+def selftest(runs=200, dump=False):
+    """Random bots play many games; check invariants instead of crashing. dump: one line per seed, to diff against web/selftest.js --dump."""
     deepest = 0
     for seed in range(runs):
         game = Game(seed)
@@ -353,12 +357,15 @@ def selftest(runs=200):
             assert 0 <= game.charge <= MAX_CHARGE
             assert all(game.walkable(e.x, e.y) for e in game.enemies)
         deepest = max(deepest, game.depth)
-    print(f"selftest ok: {runs} partite, layer massimo raggiunto da un bot casuale: {deepest}")
+        if dump:
+            print(seed, game.depth, game.turn, game.charge, game.kills, game.px, game.py)
+    if not dump:
+        print(f"selftest ok: {runs} partite, layer massimo raggiunto da un bot casuale: {deepest}")
 
 
 def main():
     if "--selftest" in sys.argv:
-        selftest()
+        selftest(dump="--dump" in sys.argv)
         return
     seed = None
     if "--seed" in sys.argv:

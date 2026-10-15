@@ -248,16 +248,21 @@ class Game {
     for (let i = 0; i < RUN_LIMIT; i++) {
       const depth = this.depth, bx = this.px, by = this.py;
       const viaKnown = this.seen[this.via[1]][this.via[0]];
+      const caps = this.visibleCaps();
       this.move(dx, dy);
       if (this.over || this.depth !== depth || (this.px === bx && this.py === by)) return;
-      if (this.alert() || (!viaKnown && this.seen[this.via[1]][this.via[0]])) return;
+      if (this.alert(caps) || (!viaKnown && this.seen[this.via[1]][this.via[0]])) return;
     }
   }
 
-  // Something worth stopping for: a visible enemy or capacitor.
-  alert() {
+  visibleCaps() {
+    return new Set([...this.caps].filter(c => { const [x, y] = c.split(",").map(Number); return this.visible(x, y); }));
+  }
+
+  // Something worth stopping for: a visible enemy, or a capacitor not already in view.
+  alert(capsBefore = new Set()) {
     return this.enemies.some(e => this.visible(e.x, e.y))
-      || [...this.caps].some(c => { const [x, y] = c.split(",").map(Number); return this.visible(x, y); });
+      || [...this.visibleCaps()].some(c => !capsBefore.has(c));
   }
 
   arc() {
@@ -326,7 +331,7 @@ class Game {
   glyph(x, y) {
     if (x === this.px && y === this.py) return "@";
     if (!this.seen[y][x]) return " ";
-    if (!this.visible(x, y)) return this.tiles[y][x];
+    if (!this.visible(x, y)) return this.caps.has([x, y].join()) ? "c" : this.tiles[y][x]; // capacitors don't move: remember them
     const enemy = this.enemyAt(x, y);
     if (enemy) return enemy.kind;
     if (this.caps.has([x, y].join())) return "c";

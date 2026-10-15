@@ -126,8 +126,9 @@ for (const btn of document.querySelectorAll("#pad button")) {
     if (!dir) return; // never auto-repeat the arc
     // holding keeps walking, but lets go as soon as something shows up
     const tick = delay => { repeat = setTimeout(() => {
+      const caps = game.visibleCaps();
       act(dir);
-      if (game.over || game.alert()) stopRepeat();
+      if (game.over || game.alert(caps)) stopRepeat();
       else tick(110);
     }, delay); };
     tick(320);
