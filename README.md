@@ -34,7 +34,7 @@ node web/selftest.js --dump    # stato finale per seed, da confrontare con:
 python3 scintilla.py --selftest --dump
 ```
 
-Solo libreria standard, un file. Il bot che conosce la mappa arriva in media al layer 5: battilo. (Record di Powy, giocando a vista: layer 6, tre volte.)
+Solo libreria standard, un file. Il bot che conosce la mappa arriva in media al layer 6: battilo. Le stanze sorvegliate hanno più spesso un condensatore: vale la pena combattere? (Record di Powy, giocando a vista: layer 6, tre volte, quando il bot faceva 5.)
 
 La corsa si ferma quando vedi un nemico, un condensatore nuovo o il via. I condensatori già visti restano sulla mappa.
 

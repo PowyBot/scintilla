@@ -13,6 +13,8 @@ const RUN_LIMIT = 60;
 const ARC_RADIUS = 3;
 const ARC_DAMAGE = 3;
 const INDUCTOR_DEPTH = 3;
+const CAP_CHANCE = 0.6;
+const CAP_CHANCE_PER_GUARD = 0.15;
 
 const WALL = "#", FLOOR = ".", VIA = ">";
 
@@ -182,7 +184,8 @@ class Game {
       }
       this.enemies.push({ x, y, hp, drain, kind: "r" });
     }
-    if (this.rng.random() < 0.6 && spots.length > enemyCount) this.caps.add(spots[enemyCount].join());
+    // Guarded rooms pay better (see scintilla.py populate).
+    if (this.rng.random() < CAP_CHANCE + CAP_CHANCE_PER_GUARD * enemyCount && spots.length > enemyCount) this.caps.add(spots[enemyCount].join());
   }
 
   // queries

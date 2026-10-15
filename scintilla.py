@@ -22,6 +22,8 @@ RUN_LIMIT = 60
 ARC_RADIUS = 3
 ARC_DAMAGE = 3
 INDUCTOR_DEPTH = 3
+CAP_CHANCE = 0.6
+CAP_CHANCE_PER_GUARD = 0.15
 
 WALL, FLOOR, VIA = "#", ".", ">"
 
@@ -113,7 +115,9 @@ class Game:
                 self.enemies.append(Enemy(x, y, hp=hp * 2, drain=drain, kind="L"))
                 continue
             self.enemies.append(Enemy(x, y, hp=hp, drain=drain))
-        if self.rng.random() < 0.6 and len(spots) > enemy_count:
+        # Guarded rooms pay better: enemy hp grows with depth but capacitors didn't,
+        # so past layer 4 the bot died of starvation, not of choices (tools_bot.py).
+        if self.rng.random() < CAP_CHANCE + CAP_CHANCE_PER_GUARD * enemy_count and len(spots) > enemy_count:
             self.caps.add(spots[enemy_count])
 
     # --- queries ----------------------------------------------------------
