@@ -278,6 +278,12 @@ class Game {
     this.endTurn();
   }
 
+  // Stand still for a turn: let them come to you (the drain clock still ticks).
+  wait() {
+    if (this.over) return;
+    this.endTurn();
+  }
+
   hit(enemy, damage) {
     enemy.hp -= damage;
     if (enemy.hp > 0) return;

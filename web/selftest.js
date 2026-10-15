@@ -12,6 +12,7 @@ for (let seed = 0; seed < 200; seed++) {
     const roll = bot.random();
     if (roll < 0.05) game.arc();
     else if (roll < 0.1) game.run(...bot.choice(moves));
+    else if (roll < 0.13) game.wait();
     else game.move(...bot.choice(moves));
     if (!game.walkable(game.px, game.py)) throw new Error(`seed ${seed}: player in a wall`);
     if (game.charge < 0 || game.charge > MAX_CHARGE) throw new Error(`seed ${seed}: charge ${game.charge}`);

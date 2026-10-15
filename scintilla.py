@@ -215,6 +215,12 @@ class Game:
         self.say(f"ZAP! Arco su {len(targets)} componenti.")
         self.end_turn()
 
+    def wait(self):
+        """Stand still for a turn: let them come to you (the drain clock still ticks)."""
+        if self.over:
+            return
+        self.end_turn()
+
     def hit(self, enemy, damage):
         enemy.hp -= damage
         if enemy.hp > 0:
@@ -318,7 +324,7 @@ def play(stdscr, seed):
         put(stdscr, H, game.status())
         for i, line in enumerate(game.log):
             put(stdscr, H + 1 + i, line)
-        put(stdscr, H + 3, "hjkl/wasd/frecce muovi · MAIUSCOLA corri · z arco · q esci")
+        put(stdscr, H + 3, "hjkl/wasd/frecce muovi · MAIUSCOLA corri · z arco · . aspetta · q esci")
         stdscr.refresh()
         key = stdscr.getch()
         if key in (ord("q"), 27):
@@ -327,6 +333,9 @@ def play(stdscr, seed):
             continue
         if key == ord("z"):
             game.arc()
+            continue
+        if key == ord("."):
+            game.wait()
             continue
         char = chr(key) if 0 <= key < 256 else ""
         if char.isupper() and char.lower() in KEYS:
@@ -351,6 +360,8 @@ def selftest(runs=200, dump=False):
                 game.arc()
             elif roll < 0.1:
                 game.run(*bot.choice(list(KEYS.values())))
+            elif roll < 0.13:
+                game.wait()
             else:
                 game.move(*bot.choice(list(KEYS.values())))
             assert game.walkable(game.px, game.py)

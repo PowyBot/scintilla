@@ -86,7 +86,8 @@ function render() {
 
 function act(dir, running = false) {
   if (game.over) return;
-  if (!dir) game.arc();
+  if (dir === "wait") game.wait();
+  else if (!dir) game.arc();
   else if (running) game.run(dir[0], dir[1]);
   else game.move(dir[0], dir[1]);
   render();
@@ -104,6 +105,7 @@ document.addEventListener("keydown", e => {
   const dir = ARROWS[e.key] || KEYS[e.key.toLowerCase()];
   if (dir) act(dir, e.shiftKey);
   else if (e.key.toLowerCase() === "z") act(null);
+  else if (e.key === ".") act("wait");
   else return;
   e.preventDefault();
 });
@@ -137,7 +139,7 @@ for (const btn of document.querySelectorAll("#pad button")) {
   btn.addEventListener("contextmenu", e => e.preventDefault());
 }
 
-// swipe on the map moves one step that way; a tap steps toward the tapped cell
+// swipe on the map moves one step that way; a tap steps toward the tapped cell, a tap on @ waits
 
 let touchStart = null;
 wrapEl.addEventListener("pointerdown", e => { touchStart = { x: e.clientX, y: e.clientY }; });
@@ -150,7 +152,7 @@ wrapEl.addEventListener("pointerup", e => {
     const cx = view.x0 + Math.floor((e.clientX - rect.left) / view.cellW);
     const cy = view.y0 + Math.floor((e.clientY - rect.top) / view.cellH);
     dx = cx - game.px; dy = cy - game.py;
-    if (!dx && !dy) return;
+    if (!dx && !dy) return act("wait"); // tap on the spark: stay put for a turn
   }
   // 8 directions: snap the angle to the nearest 45 degrees
   const octant = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));

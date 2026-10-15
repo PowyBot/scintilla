@@ -8,6 +8,7 @@ Un roguelike minuscolo da terminale. Sei una scintilla che attraversa un circuit
 - `L` induttori (dal layer 3): doppia resistenza, ma si muovono a turni alterni. Puoi seminarli.
 - `c` condensatori: +10 carica.
 - `z` arco: colpisce tutto entro 3 caselle, costa 6 carica.
+- `.` aspetta un turno (da telefono: tocca la scintilla). Lascia che vengano loro: un arco a distanza 3 brucia un resistore prima che ti tocchi.
 - `>` via: scendi al layer successivo. Il punteggio è quanto in profondità arrivi.
 
 ```
@@ -33,7 +34,7 @@ node web/selftest.js --dump    # stato finale per seed, da confrontare con:
 python3 scintilla.py --selftest --dump
 ```
 
-Solo libreria standard, un file. Il bot che conosce la mappa arriva in media al layer 5: battilo. (Record di Powy, giocando a vista: layer 6.)
+Solo libreria standard, un file. Il bot che conosce la mappa arriva in media al layer 5: battilo. (Record di Powy, giocando a vista: layer 6, due volte.)
 
 La corsa si ferma quando vedi un nemico, un condensatore nuovo o il via. I condensatori già visti restano sulla mappa.
 
