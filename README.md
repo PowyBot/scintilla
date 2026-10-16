@@ -16,6 +16,7 @@ python3 scintilla.py            # gioca (hjkl / wasd / frecce, MAIUSCOLA corre, 
 python3 scintilla.py --seed 42  # partita riproducibile
 python3 scintilla.py --selftest # 200 partite di bot casuali, controlla invarianti
 python3 tools_bot.py            # bot "barone" che vede tutta la mappa: misura la difficoltà
+python3 tools_fogbot.py         # lo stesso bot, ma vede solo quello che vedi tu: barone contro onesto
 ```
 
 ## Versione web
@@ -34,7 +35,7 @@ node web/selftest.js --dump    # stato finale per seed, da confrontare con:
 python3 scintilla.py --selftest --dump
 ```
 
-Solo libreria standard, un file. Il bot che conosce la mappa arriva in media al layer 6: battilo. Le stanze sorvegliate hanno più spesso un condensatore: vale la pena combattere? (Record di Powy, giocando a vista: layer 6, quattro volte.)
+Solo libreria standard, un file. Il bot che conosce la mappa arriva in media al layer 6, e anche quello che vede solo quanto te: battilo. Le stanze sorvegliate hanno più spesso un condensatore: vale la pena combattere? (Record di Powy, giocando a vista: layer 6, quattro volte.)
 
 La corsa si ferma quando vedi un nemico, un condensatore nuovo o il via. I condensatori già visti restano sulla mappa.
 
